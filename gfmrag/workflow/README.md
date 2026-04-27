@@ -241,6 +241,73 @@ These are the stage1 QA files consumed by the framework directly. They can eithe
 ## GFM-RAG
 The old model.
 
+## Running on a GPU server with local model files + vLLM
+
+If the server cannot download from Hugging Face directly, use this setup:
+
+1. Download the chat model on another machine.
+2. Upload the full model directory to the GPU server.
+3. Serve it with vLLM through the OpenAI-compatible API.
+4. Point Stage 1 / Stage 3 scripts to that vLLM endpoint.
+5. Upload retrieval / EL checkpoints to local folders and pass those local paths in the scripts.
+
+### 1. Start vLLM from a local model directory
+
+```bash
+cd /Users/suhyeon/kt/gfm-rag
+MODEL_PATH=/path/to/local/llm \
+MODEL_NAME=qwen2.5-7b-instruct \
+PORT=8000 \
+API_KEY=EMPTY \
+bash scripts/gfm-rag/serve_vllm_llm.sh
+```
+
+This serves an OpenAI-compatible endpoint at `http://<server-host>:8000/v1`.
+
+### 2. Run Stage 1 indexing with the served model
+
+```bash
+cd /Users/suhyeon/kt/gfm-rag
+LLM_API=vllm \
+LLM_MODEL=qwen2.5-7b-instruct \
+LLM_API_BASE=http://127.0.0.1:8000/v1 \
+LLM_API_KEY=EMPTY \
+EL_MODEL_PATH=/path/to/local/colbert-or-gte-model \
+bash scripts/gfm-rag/stage1_data_index.sh
+```
+
+### 3. Run Stage 3 QA inference with the same served model
+
+```bash
+cd /Users/suhyeon/kt/gfm-rag
+DATA_NAME=hotpotqa \
+LLM_BACKEND=vllm \
+LLM=qwen2.5-7b-instruct \
+LLM_API_BASE=http://127.0.0.1:8000/v1 \
+LLM_API_KEY=EMPTY \
+bash scripts/gfm-rag/stage3_qa_inference.sh
+```
+
+### 4. Run IRCoT inference with a local GFM-RAG checkpoint
+
+```bash
+cd /Users/suhyeon/kt/gfm-rag
+DATA_NAME=hotpotqa \
+LLM_BACKEND=vllm \
+LLM=qwen2.5-7b-instruct \
+LLM_API_BASE=http://127.0.0.1:8000/v1 \
+LLM_API_KEY=EMPTY \
+MODEL_PATH=/path/to/local/GFM-RAG-8M \
+EL_MODEL_PATH=/path/to/local/colbert-or-gte-model \
+bash scripts/gfm-rag/stage3_qa_ircot_inference.sh
+```
+
+### Notes
+
+- QA inference uses the dedicated `gfmrag.llms.VLLMChat` wrapper when `LLM_BACKEND=vllm`.
+- Stage 1 NER/OpenIE uses `llm_api=vllm`, separate from the existing OpenAI path.
+- If your served model name is unknown to `tiktoken`, set `TIKTOKEN_MODEL_NAME` in the Stage 3 scripts, for example `gpt-4o-mini`.
+- Retrieval checkpoints and EL models can be passed as local filesystem paths.
 
 ### Retrieval
 

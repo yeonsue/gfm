@@ -15,6 +15,8 @@ def init_langchain_model(
     timeout: int = 60,
     n_ctx: int | None = None,
     low_vram: bool = False,
+    api_base: str | None = None,
+    api_key: str | None = None,
     **kwargs: Any,
 ) -> ChatOpenAI | ChatTogether | ChatOllama | ChatLlamaCpp:
     """
@@ -24,10 +26,22 @@ def init_langchain_model(
     """
     if llm == "openai":
         # https://python.langchain.com/v0.1/docs/integrations/chat/openai/
-
         assert model_name.startswith("gpt-")
         return ChatOpenAI(
             api_key=os.environ.get("OPENAI_API_KEY"),
+            model=model_name,
+            temperature=temperature,
+            max_retries=max_retries,
+            timeout=timeout,
+            **kwargs,
+        )
+    elif llm == "vllm":
+        return ChatOpenAI(
+            api_key=api_key
+            or os.environ.get("VLLM_API_KEY")
+            or os.environ.get("OPENAI_API_KEY")
+            or "EMPTY",
+            base_url=api_base or os.environ.get("OPENAI_BASE_URL"),
             model=model_name,
             temperature=temperature,
             max_retries=max_retries,

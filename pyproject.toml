@@ -5,7 +5,7 @@ description = "Graph Foundation Model for Retrieval Augmented Generation"
 authors = [
     "Linhao Luo <linhao.luo@monash.edu>",
     "Zicheng Zhao <zicheng.zhao@njust.edu.cn>"
-]
+]§
 readme = "README.md"
 packages = [{include = "gfmrag"}]
 

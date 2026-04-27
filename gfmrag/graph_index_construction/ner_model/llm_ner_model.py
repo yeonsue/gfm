@@ -55,15 +55,18 @@ class LLMNERModel(BaseNERModel):
     def __init__(
         self,
         llm_api: Literal[
-            "openai", "nvidia", "together", "ollama", "llama.cpp"
+            "openai", "vllm", "nvidia", "together", "ollama", "llama.cpp"
         ] = "openai",
         model_name: str = "gpt-4o-mini",
         max_tokens: int = 1024,
+        api_base: str | None = None,
+        api_key: str | None = None,
+        timeout: int = 60,
     ):
         """Initialize the LLM-based NER model.
 
         Args:
-            llm_api (Literal["openai", "nvidia", "together", "ollama", "llama.cpp"]): The LLM API provider to use.
+            llm_api (Literal["openai", "vllm", "nvidia", "together", "ollama", "llama.cpp"]): The LLM API provider to use.
                 Defaults to "openai".
             model_name (str): Name of the language model to use.
                 Defaults to "gpt-4o-mini".
@@ -74,8 +77,17 @@ class LLMNERModel(BaseNERModel):
         self.llm_api = llm_api
         self.model_name = model_name
         self.max_tokens = max_tokens
+        self.api_base = api_base
+        self.api_key = api_key
+        self.timeout = timeout
 
-        self.client = init_langchain_model(llm_api, model_name)
+        self.client = init_langchain_model(
+            llm_api,
+            model_name,
+            api_base=api_base,
+            api_key=api_key,
+            timeout=timeout,
+        )
 
     def __call__(self, text: str) -> list:
         """Process text input to extract named entities using different chat models.

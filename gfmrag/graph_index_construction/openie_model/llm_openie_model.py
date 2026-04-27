@@ -61,18 +61,21 @@ class LLMOPENIEModel(BaseOPENIEModel):
     def __init__(
         self,
         llm_api: Literal[
-            "openai", "nvidia", "together", "ollama", "llama.cpp"
+            "openai", "vllm", "nvidia", "together", "ollama", "llama.cpp"
         ] = "openai",
         model_name: str = "gpt-4o-mini",
         max_ner_tokens: int = 1024,
         max_triples_tokens: int = 4096,
         n_ctx: int | None = None,
         low_vram: bool = False,
+        api_base: str | None = None,
+        api_key: str | None = None,
+        timeout: int = 60,
     ):
         """Initialize LLM-based OpenIE model.
 
         Args:
-            llm_api (Literal["openai", "nvidia", "together", "ollama", "llama.cpp"]): The LLM API provider to use.
+            llm_api (Literal["openai", "vllm", "nvidia", "together", "ollama", "llama.cpp"]): The LLM API provider to use.
                 Defaults to "openai".
             model_name (str): Name of the language model to use. Defaults to "gpt-4o-mini".
             max_ner_tokens (int): Maximum number of tokens for NER processing. Defaults to 1024.
@@ -93,11 +96,17 @@ class LLMOPENIEModel(BaseOPENIEModel):
         self.max_triples_tokens = max_triples_tokens
         self.n_ctx = n_ctx
         self.low_vram = low_vram
+        self.api_base = api_base
+        self.api_key = api_key
+        self.timeout = timeout
 
         self.client = init_langchain_model(
             llm=llm_api,
             model_name=model_name,
             temperature=0.0,
+            api_base=api_base,
+            api_key=api_key,
+            timeout=timeout,
             n_ctx=n_ctx,
             low_vram=low_vram,
         )
